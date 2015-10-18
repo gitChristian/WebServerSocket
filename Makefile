@@ -1,10 +1,10 @@
-CC=gcc
+CC=g++
 CFLAGS=-I.
 DEPS = # header file 
-OBJ = serverFork.o
+OBJ = webserver.o
 
-serverFork: $(OBJ)
+webserver: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-%.o: %.c $(DEPS)
+%.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
