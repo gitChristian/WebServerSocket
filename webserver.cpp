@@ -18,7 +18,8 @@ int main(int argc, char *argv[])
          exit(1);
      }
 
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);	//create socket
+     //create socket
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         fprintf(stderr,"ERROR, couldn't get socket.\n");
 
@@ -39,14 +40,17 @@ int main(int argc, char *argv[])
 
     struct sockaddr_in cli_addr;
     socklen_t clilen;
-    int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-    
-    int n;
-   	char buffer[256];
 
-   	n = read(newsockfd,buffer,255);
-   	printf("Here is the message: %s\n",buffer);
+    while(1){
+	    int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+	    
+	    int n;
+	   	char buffer[256];
 
-   	close(newsockfd);//close connection 
+	   	n = read(newsockfd,buffer,255);
+	   	printf("Here is the message: %s\n",buffer);
+
+   		close(newsockfd);//close connection 
+    }
     close(sockfd);
 }
