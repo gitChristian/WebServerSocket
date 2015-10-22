@@ -12,7 +12,7 @@
 using namespace std;
 
 void dumpRequest(const int socket, char* requestMessage);
-void handleRequest(char* request);
+void handleRequest(char* request, int socket);
 char* getFileName( char* HTTPRequest);
 
 int main(int argc, char *argv[])
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	    
 	    char requestMessage[10000];
 	    dumpRequest(newsockfd, requestMessage);
-	    handleRequest(requestMessage);
+	    handleRequest(requestMessage, newsockfd);
 
    		close(newsockfd);//close connection 
     }
@@ -68,11 +68,22 @@ void dumpRequest(const int socket, char* requestMessage)
 }
 
 //part b
-void handleRequest(char* request)
+void handleRequest(char* request, int socket)
 {
 	char* fileName = getFileName(request);
-	printf("Here is the filename: %s\n",fileName);
 
+	//open file and get file size
+	FILE* fp = fopen(fileName, "r");
+	fseek(fp, 0L, SEEK_END); 
+    int fileSize = ftell(fp);
+    fseek(fp, 0L, SEEK_SET);
+
+    void* fileBuffer = malloc(sizeof(char) * fileSize + 100);
+    fread(fileBuffer, sizeof(char), fileSize, fp);
+    
+    write(socket,fileBuffer,fileSize);
+    free(fileBuffer);
+    fclose(fp);
 }
 
 //returns requested filename
