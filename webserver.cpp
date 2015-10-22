@@ -11,6 +11,10 @@
 
 using namespace std;
 
+void dumpRequest(const int socket, char* requestMessage);
+void handleRequest(char* request);
+char* getFileName( char* HTTPRequest);
+
 int main(int argc, char *argv[])
 {
 	if (argc < 2) {
@@ -23,7 +27,7 @@ int main(int argc, char *argv[])
     if (sockfd < 0) 
         fprintf(stderr,"ERROR, couldn't get socket.\n");
 
-    //address of server
+    //bind address of server
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY; //ip address
@@ -36,21 +40,45 @@ int main(int argc, char *argv[])
          		exit(1);
               }
 
-    listen(sockfd,5);	//5 simultaneous connection at most
+    //listen
+    listen(sockfd,5);
 
+    //accept and handle connections one at a time
     struct sockaddr_in cli_addr;
     socklen_t clilen;
-
     while(1){
 	    int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 	    
-	    int n;
-	   	char buffer[256];
-
-	   	n = read(newsockfd,buffer,255);
-	   	printf("Here is the message: %s\n",buffer);
+	    char requestMessage[10000];
+	    dumpRequest(newsockfd, requestMessage);
+	    handleRequest(requestMessage);
 
    		close(newsockfd);//close connection 
     }
     close(sockfd);
+}
+
+//part a
+//dumps the request to console
+//return the HTTP request in char* requestMessage
+void dumpRequest(const int socket, char* requestMessage)
+{
+   	read(socket, requestMessage,10000);
+   	printf("Here is the message: %s\n",requestMessage);
+}
+
+//part b
+void handleRequest(char* request)
+{
+	char* fileName = getFileName(request);
+	printf("Here is the filename: %s\n",fileName);
+
+}
+
+//returns requested filename
+char* getFileName(char* HTTPRequest)
+{
+	char* fileName = strtok(HTTPRequest, " ");
+    fileName = strtok(NULL, " ");
+    return ++fileName;         
 }
