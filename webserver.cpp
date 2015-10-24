@@ -46,24 +46,90 @@ int main(int argc, char *argv[])
     //accept and handle connections one at a time
     struct sockaddr_in cli_addr;
     socklen_t clilen;
+    int pid;
     while(1){
 	    int newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-	    
+		
+        if (newsockfd < 0){
+            perror("ERROR");
+            exit(1);
+        }
+        pid = fork();
+
+        if (pid < 0){
+            perror("ERROR");
+            exit(1);
+        }
+
+        if (pid == 0){
 	    char requestMessage[10000];
 	    dumpRequest(newsockfd, requestMessage);
 	    handleRequest(requestMessage, newsockfd);
+        }
 
    		close(newsockfd);//close connection 
     }
     close(sockfd);
 }
 
+
+void header(int socket, int status, char* fileName, int contentLength, char* request)
+{
+    write(socket, "HTTP/1.1 ", strlen("HTTP/1.1 "));
+
+if (status == 200)
+    write(socket, "200 OK", strlen("200 OK"));
+else if (status == 400)
+    write(socket, "Bad Request", strlen("Bad Request"));
+else if (status == 404)
+    write(socket, "404 Not Found", strlen("404 Not Found"));
+else if (status == 500)
+    write(socket, "500 Internal Server Error", strlen("500 Internal Server Error"));
+
+else 
+    write(socket, "Unknown error type", strlen("Unknown error type"));
+
+
+        char content[10000];
+if(strstr(request, ".html") != NULL)
+        strcpy(content, "text/html; charset=UTF-8\n");
+else if(strstr(request, ".gif") != NULL)
+        strcpy(content, "image/gif\n");
+else if(strstr(request, ".jpeg") != NULL)
+        strcpy(content, "image/jpeg\n");
+else if(strstr(request, ".jpg") != NULL)
+        strcpy(content, "image/jpg\n");
+else {
+     fprintf(stderr,"ERROR, not supported\n");
+     exit(1);
+}
+
+    //content 
+    char length[10000];
+    write(socket, "\nContent-Language: en-US\n", 25);
+    write(socket, "Content-Type: ",14);
+    write(socket, content, strlen(content));
+    sprintf(length, "Content-Length;%d", contentLength);
+    write(socket, length, strlen(length));
+    write(socket, "\nConnection: keep-alive\n\n", 25);
+}
+
+
+
+
 //part a
 //dumps the request to console
 //return the HTTP request in char* requestMessage
 void dumpRequest(const int socket, char* requestMessage)
 {
-   	read(socket, requestMessage,10000);
+    int check;
+    check = read(socket, requestMessage,10000);
+    
+    if (check < 0){
+    perror("ERROR READING");
+    exit(1);
+}
+
    	printf("Here is the message: %s\n",requestMessage);
 }
 
@@ -74,9 +140,19 @@ void handleRequest(char* request, int socket)
 
 	//open file and get file size
 	FILE* fp = fopen(fileName, "r");
+
+    if (fp == NULL)
+    {
+
+        header(socket, 404, "text/html", 0, fileName);
+        printf("Failed to open '%s'", fileName);    
+    }
+
 	fseek(fp, 0L, SEEK_END); 
     int fileSize = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
+        
+    header(socket, 200, fileName, fileSize, fileName);
 
     void* fileBuffer = malloc(sizeof(char) * fileSize + 100);
     fread(fileBuffer, sizeof(char), fileSize, fp);
