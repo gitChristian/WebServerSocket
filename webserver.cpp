@@ -82,10 +82,10 @@ void header(int socket, int status, char* fileName, int contentLength, char* req
         strcpy(content, "image/jpeg\n");
 	else if(strstr(request, ".jpg") != NULL)
         strcpy(content, "image/jpg\n");
-	else {
+	/*else {
 	    fprintf(stderr,"ERROR, not supported\n");
 		exit(1);
-	}
+	}*/
 
     //content 
     char length[10000];
@@ -119,8 +119,9 @@ void handleRequest(char* request, int socket)
 	FILE* fp = fopen(fileName, "r");
     if (fp == NULL)
     {
-        header(socket, 404, "text/html", 0, fileName);
-        printf("Failed to open '%s'", fileName);    
+    	return;
+        /*header(socket, 404, "text/html", 0, fileName);
+        printf("Failed to open '%s'", fileName);    */
     }
 
 	fseek(fp, 0L, SEEK_END); 
